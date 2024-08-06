@@ -1,20 +1,27 @@
 import { createBrowserRouter } from "react-router-dom";
-import HomePage from "./pages/HomePage";
-import FormPage from "./pages/FormPage";
+import Layout from "./layout/layout";
+import MyForm from "./components/MyForm";
+import MyTable from "./components/MyTable";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element:<HomePage />,
+    element: <Layout />,
+    children: [
+      {
+        path: "/",
+        element: <MyTable />,
+      },
+      {
+        path: "/add-user",
+        element: <MyForm />,
+      },
+      {
+        path: "/edit-user/:id",
+        element: <MyForm />,
+      },
+    ],
   },
-  {
-    path: "/add-user",
-    element: <FormPage />,
-  },
-  {
-    path: "/edit-user/:id",
-    element: <FormPage />,
-  },
+
   {
     path: "*",
     element: <div>404 Not Found</div>,

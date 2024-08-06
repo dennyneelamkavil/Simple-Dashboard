@@ -1,4 +1,4 @@
-import { AppBar, IconButton, Toolbar, Typography} from "@mui/material";
+import { AppBar, IconButton, Toolbar, Typography } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import React from "react";
 import { styled } from "@mui/material/styles";

@@ -3,7 +3,7 @@ import MyNavbar from "../components/MyNavbar";
 import { Box, Container, CssBaseline } from "@mui/material";
 import Sidebar from "../components/Sidebar";
 import { styled } from "@mui/material/styles";
-import MyForm from "../components/MyForm";
+import { Outlet } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -32,7 +32,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   justifyContent: "flex-end",
 }));
 
-export default function FormPage() {
+export default function Layout() {
   const [open, setOpen] = React.useState(false);
 
   const handleDrawerOpen = () => {
@@ -51,7 +51,7 @@ export default function FormPage() {
       <Main open={open}>
         <DrawerHeader />
         <Container>
-          <MyForm />
+          <Outlet />
         </Container>
       </Main>
     </Box>
