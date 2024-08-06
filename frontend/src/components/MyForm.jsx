@@ -2,33 +2,31 @@ import React, { useEffect } from "react";
 import { Box, Button, Container, Grid, Paper, TextField, Typography } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import { addUser, getUserById, updateUser } from "../apis";
 import { useParams } from "react-router-dom";
+import { useAddUserMutation, useGetAllUsersQuery, useGetUserByIdQuery, useUpdateUserMutation } from "../apis/apiSlice";
 
 export default function MyForm() {
   const { handleSubmit, register, reset, setValue, watch, formState: { errors } } = useForm();
-
   const { id } = useParams();
   const isEdit = Boolean(id);
+
+  const [addUser] = useAddUserMutation();
+  const [updateUser] = useUpdateUserMutation();
+  const {data:userData=[], error:fetchError, isLoading} = useGetUserByIdQuery(id, {skip: !isEdit});
+  const { refetch } = useGetAllUsersQuery();
 
   const watchedFields = watch();
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!isEdit) return;
-      try {
-        const res = await getUserById(id);
-        let formData = res.data;
-        Object.keys(formData).forEach((key) => {
-          setValue(key, formData[key]);
+      if (isEdit && userData.data) {
+        Object.keys(userData.data).forEach((key) => {
+          setValue(key, userData.data[key]);
         });
-      } catch (error) {
-        toast.error("Failed to load data");
+        setValue("password", "");
+        setValue("confirmpassword", "");
       }
-    };
-    loadData();
-  }, [id, isEdit, setValue]);
-
+    }, [isEdit, userData, setValue])
+      
   const onSubmit = async (data) => {
     if (data.password !== data.confirmpassword) {
       toast.error("Passwords do not match");
@@ -43,13 +41,23 @@ export default function MyForm() {
       if (fileInput && fileInput.files[0]) {
         formdata.append("image", fileInput.files[0]);
       }
-      isEdit ? await updateUser(id, formdata) : await addUser(formdata);
-      toast.success(isEdit ? "User updated successfully" : "User added successfully");
+      if (isEdit) {
+        await updateUser({ id, data: formdata }).unwrap();
+        toast.success("User updated successfully");
+      } else {
+        await addUser(formdata).unwrap();
+        toast.success("User added successfully");
+      }
       reset();
+      refetch();
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.log(error);
+      toast.error(error?.response?.data?.message);
     }
   };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (fetchError) return <div>Error: {fetchError.message}</div>;
 
   return (
     <>

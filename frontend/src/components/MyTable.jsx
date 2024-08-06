@@ -9,33 +9,20 @@ import {
   TableRow,
   Button,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { deleteUser, getAllUsers } from "../apis";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import { useDeleteUserMutation, useGetAllUsersQuery } from "../apis/apiSlice";
 
 export default function MyTable() {
-  const [lists, setLists] = useState([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        let res = await getAllUsers();
-        setLists(res.data);
-      } catch (error) {
-        toast.error("Something went wrong");
-      }
-    };
-    init();
-  });
+  const [deleteUser] = useDeleteUserMutation();
+  const { data:users=[], error, isLoading, refetch } = useGetAllUsersQuery();
 
   const handleDelete = async (id) => {
     try {
-      await deleteUser(id);
+      await deleteUser(id).unwrap();
       toast.success("User deleted successfully");
-      let updatedList = lists.filter((item) => item._id !== id);
-      setLists(updatedList);
+      refetch();
     } catch (error) {
       toast.error("Something went wrong");
     }
@@ -44,6 +31,9 @@ export default function MyTable() {
   const handleUpdate = async (id) => {
     navigate(`/edit-user/${id}`);
   };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
 
   return (
     <Container>
@@ -61,37 +51,41 @@ export default function MyTable() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {lists.map((row, index) => (
-              <TableRow key={index}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{row.username}</TableCell>
-                <TableCell>{row.address}</TableCell>
-                <TableCell>{row.email}</TableCell>
-                <TableCell>
-                  <Avatar alt={row.username} src={row.image} />
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="text"
-                    onClick={() => {
-                      handleUpdate(row._id);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="text"
-                    onClick={() => {
-                      handleDelete(row._id);
-                    }}
-                  >
-                    Delete
-                  </Button>
+          {Array.isArray(users.data) && users.data.length > 0 ? (
+              users.data.map(({ _id, username, address, email, image }, index) => (
+                <TableRow key={_id}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{username}</TableCell>
+                  <TableCell>{address}</TableCell>
+                  <TableCell>{email}</TableCell>
+                  <TableCell>
+                    <Avatar alt={username} src={image} />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="text"
+                      onClick={() => handleUpdate(_id)}
+                    >
+                      Edit
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="text"
+                      onClick={() => handleDelete(_id)}
+                    >
+                      Delete
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No users found.
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>
